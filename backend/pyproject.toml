@@ -3,7 +3,7 @@ name = "backend"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "Kaio",email = "kaio.lima@estudantes.ifg.edu.br"}
+    {name = "Luiz",email = "lferrrazmacedo@gmail.com"}
 ]
 readme = "README.md"
 requires-python = ">=3.14"
