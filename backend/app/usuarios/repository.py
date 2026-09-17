@@ -13,8 +13,6 @@ def buscar_por_email(db: Session, email: str) -> Usuario | None:
 
 
 def criar(db: Session, dados: dict) -> Usuario:
-    # Recebe dict, e nao UsuarioCriar: o service ja trocou senha por
-    # senha_hash, entao o formato nao bate mais com nenhum schema.
     usuario = Usuario(**dados)
     db.add(usuario)
     db.flush()
