@@ -32,7 +32,51 @@ Projeto da disciplina Programação para Web III (IFG Câmpus Jataí).
 As regras de negócio (RN01 a RN05) estão em
 [`backend/docs/regras-de-negocio.md`](backend/docs/regras-de-negocio.md).
 
-## Rodando na sua máquina
+## Rodando com Docker (o jeito mais fácil)
+
+Só precisa do [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+instalado e aberto. Na raiz do repositório:
+
+```bash
+cp .env.example .env
+```
+
+No `.env`, troque a `POSTGRES_PASSWORD` (só letras e números) e preencha a
+`SECRET_KEY` com uma chave aleatória, por exemplo a saída de
+`python -c "import secrets; print(secrets.token_hex(32))"`. Depois:
+
+```bash
+docker compose up -d
+```
+
+A primeira vez demora alguns minutos, porque monta as imagens. Depois:
+
+| O quê | Endereço |
+|---|---|
+| App | <http://localhost:3000> |
+| API (Swagger) | <http://localhost:8000/docs> |
+
+### As migrações
+
+**Rodam sozinhas:** toda vez que a API sobe, ela roda `alembic upgrade head`
+antes de atender. Para conferir ou rodar na mão:
+
+```bash
+docker compose exec api alembic current          # em que migração o banco está
+docker compose exec api alembic upgrade head     # aplica as que faltam
+```
+
+### Outros comandos úteis
+
+```bash
+docker compose logs -f api                       # o log da API
+docker compose exec db psql -U gymlog -d gymlog -c "SELECT * FROM treinos;"
+docker compose up -d --build                     # depois de mudar o código
+docker compose down                              # para tudo (os dados ficam)
+docker compose down -v                           # para tudo e apaga o banco
+```
+
+## Rodando sem Docker
 
 Pré-requisitos: **Python 3.14** com **Poetry 2**, **Node 24** com **pnpm**, e
 **Docker** (só para o PostgreSQL; sem ele, use SQLite).
