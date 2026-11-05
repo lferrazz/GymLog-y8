@@ -1,35 +1,37 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Dumbbell, Mail, Lock, AlertCircle } from "lucide-react"
 import { M3Button, M3TextField } from "@/components/m3"
-import { USUARIO_DEMO } from "@/lib/treino-data"
+import { useAviso, useSessaoAcoes } from "@/components/providers"
+import { AppRoutes } from "@/lib/routes"
+import { ErroDeSessao } from "@/lib/services/sessao-service"
 
-export function LoginScreen({
-  onSuccess,
-  onGoRegister,
-}: {
-  onSuccess: () => void
-  onGoRegister: () => void
-}) {
+export function LoginScreen() {
+  const sessao = useSessaoAcoes()
+  const avisar = useAviso()
+  const router = useRouter()
   const [email, setEmail] = useState("")
   const [senha, setSenha] = useState("")
   const [erro, setErro] = useState<string | null>(null)
   const [carregando, setCarregando] = useState(false)
 
-  function entrar(e: React.FormEvent) {
+  async function entrar(e: React.FormEvent) {
     e.preventDefault()
     setErro(null)
     setCarregando(true)
-    // Simula chamada à API
-    setTimeout(() => {
-      if (email.trim() === USUARIO_DEMO.email && senha === USUARIO_DEMO.senha) {
-        onSuccess()
-      } else {
-        setErro("E-mail ou senha incorretos. Tente novamente.")
-        setCarregando(false)
-      }
-    }, 700)
+    try {
+      await sessao.entrar(email, senha)
+    } catch (falha) {
+      if (!(falha instanceof ErroDeSessao)) throw falha
+      setErro(falha.message)
+      setCarregando(false)
+      avisar("Não deu para entrar", { erro: true })
+      return
+    }
+    avisar(`Bem-vindo, ${sessao.usuario?.nome}!`)
+    router.replace(AppRoutes.treinos)
   }
 
   return (
@@ -81,17 +83,12 @@ export function LoginScreen({
         <span className="text-muted-foreground">Ainda não tem conta?</span>
         <button
           type="button"
-          onClick={onGoRegister}
+          onClick={() => router.push(AppRoutes.cadastro)}
           className="font-medium text-primary hover:underline"
         >
           Cadastre-se
         </button>
       </div>
-
-      <p className="mt-8 rounded-xl bg-muted/50 px-4 py-3 text-center text-xs text-muted-foreground">
-        Protótipo — use <strong className="font-medium text-foreground">{USUARIO_DEMO.email}</strong> e senha{" "}
-        <strong className="font-medium text-foreground">{USUARIO_DEMO.senha}</strong>.
-      </p>
     </div>
   )
 }

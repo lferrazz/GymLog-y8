@@ -1,6 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Roboto } from 'next/font/google'
+import { Providers } from '@/components/providers'
 import './globals.css'
 
 const roboto = Roboto({
@@ -48,7 +49,13 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={`light ${roboto.variable} bg-background`}>
       <body className="font-sans antialiased">
-        {children}
+        <Providers>
+          <main className="flex min-h-svh justify-center bg-muted/40 md:items-center md:py-8">
+            <div className="relative flex h-svh w-full max-w-md flex-col overflow-hidden bg-background shadow-xl md:h-[860px] md:rounded-[2.5rem] md:border-8 md:border-foreground/90">
+              <div className="flex-1 overflow-y-auto">{children}</div>
+            </div>
+          </main>
+        </Providers>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

@@ -1,0 +1,22 @@
+from typing import Sequence, Union
+
+from alembic import op
+import sqlalchemy as sa
+
+
+revision: str = '0d26d8884678'
+down_revision: Union[str, Sequence[str], None] = '08b2e466aa5b'
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+
+def upgrade() -> None:
+    with op.batch_alter_table('treinos', schema=None) as batch_op:
+        batch_op.add_column(sa.Column('dono_id', sa.String(length=36), nullable=True))
+        batch_op.create_foreign_key('fk_treinos_dono', 'usuarios', ['dono_id'], ['id'])
+
+
+def downgrade() -> None:
+    with op.batch_alter_table('treinos', schema=None) as batch_op:
+        batch_op.drop_constraint('fk_treinos_dono', type_='foreignkey')
+        batch_op.drop_column('dono_id')

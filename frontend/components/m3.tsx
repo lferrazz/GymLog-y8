@@ -4,8 +4,6 @@ import type React from "react"
 import { forwardRef, useId } from "react"
 import { cn } from "@/lib/utils"
 
-/* ---------------------------------- Button --------------------------------- */
-
 type ButtonVariant = "filled" | "tonal" | "outlined" | "text"
 
 export function M3Button({
@@ -29,8 +27,6 @@ export function M3Button({
   )
 }
 
-/* --------------------------------- FAB ------------------------------------- */
-
 export function M3ExtendedFab({
   className,
   children,
@@ -48,8 +44,6 @@ export function M3ExtendedFab({
     </button>
   )
 }
-
-/* ------------------------------- Text Field -------------------------------- */
 
 type FieldProps = {
   label: string
@@ -104,8 +98,6 @@ export const M3TextField = forwardRef<
   )
 })
 
-/* --------------------------------- Select ---------------------------------- */
-
 export function M3Select({
   label,
   className,
@@ -134,8 +126,6 @@ export function M3Select({
   )
 }
 
-/* ------------------------------ Filter Chip -------------------------------- */
-
 export function M3Chip({
   selected,
   className,
@@ -158,8 +148,6 @@ export function M3Chip({
     </button>
   )
 }
-
-/* ------------------------------ Top App Bar -------------------------------- */
 
 export function M3TopAppBar({
   title,
@@ -201,22 +189,30 @@ export function M3IconButton({
   )
 }
 
-/* -------------------------------- Snackbar --------------------------------- */
-
-export function M3Snackbar({ message }: { message: string }) {
+export function M3Snackbar({
+  message,
+  tom,
+}: {
+  message: string
+  tom?: "sucesso" | "erro"
+}) {
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-4">
       <div
         role="status"
-        className="pointer-events-auto flex max-w-sm items-center gap-3 rounded-xl bg-foreground px-4 py-3 text-sm text-background shadow-lg"
+        data-tom={tom}
+        className={cn(
+          "pointer-events-auto flex max-w-sm items-center gap-3 rounded-xl px-4 py-3 text-sm shadow-lg",
+          tom === "sucesso" && "bg-success text-white",
+          tom === "erro" && "bg-destructive text-white",
+          !tom && "bg-foreground text-background",
+        )}
       >
         {message}
       </div>
     </div>
   )
 }
-
-/* --------------------------------- Dialog ---------------------------------- */
 
 export function M3Dialog({
   title,

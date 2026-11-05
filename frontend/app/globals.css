@@ -52,7 +52,6 @@
 
 :root {
   color-scheme: light;
-  /* Material Design 3 — light scheme, indigo primary */
   --background: oklch(0.985 0.006 275);
   --foreground: oklch(0.22 0.02 275);
   --card: oklch(1 0 0);
