@@ -8,8 +8,6 @@ class UsuarioCriar(BaseModel):
 
 
 class UsuarioPublico(BaseModel):
-    # Nao herda de UsuarioCriar de proposito: se herdasse, o campo senha
-    # viria junto e vazaria na resposta.
     model_config = ConfigDict(from_attributes=True)
 
     id: str

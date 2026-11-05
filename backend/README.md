@@ -57,6 +57,19 @@ DATABASE_URL=postgresql+psycopg2://usuario:senha@localhost:5432/gymlog
 Depois de trocar, `alembic upgrade head` reconstrói o schema inteiro no banco
 novo, na ordem em que as migrações foram escritas.
 
+Sem PostgreSQL instalado, o Docker sobe um em um comando (troque a senha, e
+use a mesma na URL do `.env`):
+
+```bash
+docker run -d --name gymlog-postgres --restart unless-stopped \
+  -e POSTGRES_USER=gymlog -e POSTGRES_PASSWORD=troque-esta-senha \
+  -e POSTGRES_DB=gymlog -p 5432:5432 \
+  -v gymlog-pgdata:/var/lib/postgresql/data postgres:17
+
+# conferindo pelo outro lado:
+docker exec -it gymlog-postgres psql -U gymlog -d gymlog -c "SELECT * FROM treinos;"
+```
+
 ## Migrações
 
 ```bash
@@ -94,6 +107,19 @@ não em todas.
 10. **Histórico do banco** — `alembic current` aponta para a migração
     `dono_id em treinos`.
 
+### As regras de negócio (docs/regras-de-negocio.md)
+
+Cada recusa abaixo é decisão do `service.py` e sai como **409**:
+
+| Regra | Pedido | Resposta |
+|---|---|---|
+| RN01 | dois treinos `"Peito"` no mesmo dia, mesma pessoa | 409 no segundo |
+| RN02 | `data_treino` amanhã | 409 |
+| RN03 | treinos de 500 e 101 minutos no mesmo dia | 409 no segundo |
+| RN05 | o mesmo e-mail duas vezes | 409 |
+
+A RN04 (cada um no seu acervo) responde 404, pelo motivo do item 7.
+
 ## Estrutura
 
 ```
@@ -103,11 +129,34 @@ backend/
 │   └── versions/           # o histórico do banco
 ├── app/
 │   ├── database.py         # engine, Session, Base
-│   ├── seguranca.py        # hash, JWT e o porteiro
-│   ├── main.py             # routers e tradução de erro em código HTTP
-│   ├── treino/
+│   ├── senhas.py           # o hash da senha (bcrypt)
+│   ├── seguranca.py        # o JWT e o porteiro (get_current_user)
+│   ├── main.py             # routers, CORS e tradução de erro em código HTTP
+│   ├── treinos/
 │   └── usuarios/
+├── tests/                  # os testes dos endpoints (poetry run pytest)
+├── Dockerfile              # a imagem da API para a nuvem
 ├── .env.example
 ├── alembic.ini
 └── pyproject.toml
 ```
+
+## Testes
+
+```bash
+poetry run pytest
+```
+
+Sobem a API num banco SQLite descartável, recriado a cada teste: não precisam
+do PostgreSQL nem do servidor rodando.
+
+## Docker
+
+```bash
+docker build -t gymlog-api .
+docker run -p 8000:8000 -e DATABASE_URL=... -e SECRET_KEY=... gymlog-api
+```
+
+O container roda as migrações (`alembic upgrade head`) e sobe a API na porta
+de `PORT` (8000 por padrão). `CORS_ORIGINS` aceita os endereços do app
+publicado, separados por vírgula.

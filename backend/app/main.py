@@ -1,24 +1,32 @@
+import os
+
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from .treino import controller as treino_controller
-from .treino.erros import ErroDeTreino, TreinoNaoEncontradoError
+from .treinos import controller as treinos_controller
+from .treinos.erros import ErroDeTreino, TreinoNaoEncontrado
 from .usuarios import controller as usuarios_controller
 from .usuarios.erros import EmailJaCadastrado, ErroDeUsuario
 
-# Nao existe mais create_all aqui: quem cria e altera tabela agora e o
-# Alembic. Deixar os dois jeitos convivendo faria o banco nascer pelo
-# create_all e as migracoes nunca rodarem, escondendo erro ate a producao.
+ORIGENS_PUBLICADAS = [o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()]
 
-app = FastAPI(title="API do Meu Projeto", version="0.5.0")
-app.include_router(treino_controller.router)
+app = FastAPI(title="GymLog API", version="1.0.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ORIGENS_PUBLICADAS,
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+app.include_router(treinos_controller.router)
 app.include_router(usuarios_controller.router)
 
 
 @app.exception_handler(ErroDeTreino)
 def traduzir_recusa(request: Request, erro: ErroDeTreino):
-    """O unico lugar do sistema que transforma recusa em numero HTTP."""
-    codigo = 404 if isinstance(erro, TreinoNaoEncontradoError) else 409
+    codigo = 404 if isinstance(erro, TreinoNaoEncontrado) else 409
     return JSONResponse(status_code=codigo, content={"detail": str(erro)})
 
 
@@ -27,8 +35,6 @@ def traduzir_recusa_de_usuario(request: Request, erro: ErroDeUsuario):
     if isinstance(erro, EmailJaCadastrado):
         return JSONResponse(status_code=409, content={"detail": str(erro)})
 
-    # WWW-Authenticate e exigido pela especificacao do HTTP no 401 e e o que
-    # faz o /docs abrir o Authorize.
     return JSONResponse(
         status_code=401,
         content={"detail": str(erro)},

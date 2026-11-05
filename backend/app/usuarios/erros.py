@@ -9,6 +9,4 @@ class EmailJaCadastrado(ErroDeUsuario):
 
 class CredenciaisInvalidas(ErroDeUsuario):
     def __init__(self) -> None:
-        # Mensagem generica: dizer "e-mail nao existe" ou "senha errada"
-        # entregaria ao atacante quais e-mails estao cadastrados.
         super().__init__("Credenciais invalidas")

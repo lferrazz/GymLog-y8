@@ -7,21 +7,9 @@ DURACAO_MAXIMA = 600
 
 
 class ValidacoesDeTreino:
-    """Validadores compartilhados por TreinoCriar e TreinoAtualizar.
-
-    Trocamos Field() por field_validator para poder escrever a mensagem em
-    portugues: o Field gera texto em ingles ("String should have at least 3
-    characters"), que aparece cru no 422 para quem usa a API.
-
-    check_fields=False permite declarar o validador aqui, num lugar so, mesmo
-    que o campo seja declarado nas subclasses.
-    """
-
     @field_validator("nome", check_fields=False)
     @classmethod
     def validar_nome(cls, valor: str | None) -> str | None:
-        # None e caso legitimo no TreinoAtualizar (campo nao enviado), entao
-        # passa direto sem validar.
         if valor is None:
             return valor
         valor = valor.strip()
@@ -56,8 +44,6 @@ class TreinoPublico(TreinoCriar):
     model_config = ConfigDict(from_attributes=True)
 
     id: str
-    # So sai na resposta: o cliente nunca envia dono_id, quem preenche e o
-    # service a partir do token.
     dono_id: str | None = None
 
 
