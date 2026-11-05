@@ -1,22 +1,24 @@
 "use client"
 
 import { useState } from "react"
-import { ArrowLeft, User, Mail, Lock, Check, X } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { ArrowLeft, User, Mail, Lock, Check, X, AlertCircle } from "lucide-react"
 import { M3Button, M3TextField, M3IconButton, M3TopAppBar } from "@/components/m3"
+import { useAviso, useSessaoAcoes } from "@/components/providers"
+import { AppRoutes } from "@/lib/routes"
+import { ErroDeSessao } from "@/lib/services/sessao-service"
 
 type Erros = { nome?: string; email?: string; senha?: string }
 
-export function RegisterScreen({
-  onSuccess,
-  onBack,
-}: {
-  onSuccess: () => void
-  onBack: () => void
-}) {
+export function RegisterScreen() {
+  const sessao = useSessaoAcoes()
+  const avisar = useAviso()
+  const router = useRouter()
   const [nome, setNome] = useState("")
   const [email, setEmail] = useState("")
   const [senha, setSenha] = useState("")
   const [erros, setErros] = useState<Erros>({})
+  const [recusa, setRecusa] = useState<string | null>(null)
   const [carregando, setCarregando] = useState(false)
 
   const regras = [
@@ -35,11 +37,22 @@ export function RegisterScreen({
     return Object.keys(e).length === 0
   }
 
-  function cadastrar(ev: React.FormEvent) {
+  async function cadastrar(ev: React.FormEvent) {
     ev.preventDefault()
+    setRecusa(null)
     if (!validar()) return
     setCarregando(true)
-    setTimeout(() => onSuccess(), 700)
+    try {
+      await sessao.cadastrar(nome, email, senha)
+    } catch (falha) {
+      if (!(falha instanceof ErroDeSessao)) throw falha
+      setRecusa(falha.message)
+      setCarregando(false)
+      avisar("Não deu para criar a conta", { erro: true })
+      return
+    }
+    avisar("Conta criada")
+    router.replace(AppRoutes.treinos)
   }
 
   return (
@@ -47,7 +60,7 @@ export function RegisterScreen({
       <M3TopAppBar
         title="Criar conta"
         leading={
-          <M3IconButton aria-label="Voltar" onClick={onBack}>
+          <M3IconButton aria-label="Voltar" onClick={() => router.replace(AppRoutes.login)}>
             <ArrowLeft className="h-5 w-5" aria-hidden />
           </M3IconButton>
         }
@@ -93,6 +106,16 @@ export function RegisterScreen({
             </li>
           ))}
         </ul>
+
+        {recusa && (
+          <div
+            role="alert"
+            className="flex items-start gap-2 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          >
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+            <span>{recusa}</span>
+          </div>
+        )}
 
         <M3Button type="submit" disabled={carregando} className="mt-2">
           {carregando ? "Criando conta..." : "Cadastrar"}

@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { ArrowLeft } from "lucide-react"
+import { AlertCircle, ArrowLeft } from "lucide-react"
 import { M3TopAppBar, M3IconButton, M3Button, M3TextField, M3Select } from "@/components/m3"
+import type { DadosDoTreino } from "@/lib/models/treino"
 import { type Treino, TIPOS_TREINO } from "@/lib/treino-data"
 
 type Erros = {
@@ -12,7 +13,6 @@ type Erros = {
   duracao_min?: string
 }
 
-// Converte ISO -> valor de input datetime-local
 function paraInput(iso?: string): string {
   if (!iso) return ""
   const d = new Date(iso)
@@ -26,7 +26,7 @@ export function FormScreen({
   onCancelar,
 }: {
   treino?: Treino
-  onSalvar: (dados: Omit<Treino, "id">) => void
+  onSalvar: (dados: DadosDoTreino) => Promise<void>
   onCancelar: () => void
 }) {
   const editando = Boolean(treino)
@@ -36,6 +36,9 @@ export function FormScreen({
   const [duracao, setDuracao] = useState(treino ? String(treino.duracao_min) : "")
   const [obs, setObs] = useState(treino?.observacoes ?? "")
   const [erros, setErros] = useState<Erros>({})
+  const [recusa, setRecusa] = useState<string | null>(null)
+  const [salvando, setSalvando] = useState(false)
+  const tipos: string[] = tipo && !TIPOS_TREINO.some((t) => t === tipo) ? [...TIPOS_TREINO, tipo] : [...TIPOS_TREINO]
 
   function validar(): boolean {
     const e: Erros = {}
@@ -49,16 +52,23 @@ export function FormScreen({
     return Object.keys(e).length === 0
   }
 
-  function salvar(ev: React.FormEvent) {
+  async function salvar(ev: React.FormEvent) {
     ev.preventDefault()
+    setRecusa(null)
     if (!validar()) return
-    onSalvar({
-      nome: nome.trim(),
-      tipo_treino: tipo,
-      data_treino: new Date(data).toISOString(),
-      duracao_min: Number(duracao),
-      observacoes: obs.trim() ? obs.trim() : null,
-    })
+    setSalvando(true)
+    try {
+      await onSalvar({
+        nome: nome.trim(),
+        tipo_treino: tipo,
+        data_treino: `${data}:00`,
+        duracao_min: Number(duracao),
+        observacoes: obs.trim() ? obs.trim() : null,
+      })
+    } catch (falha) {
+      setRecusa(falha instanceof Error ? falha.message : String(falha))
+      setSalvando(false)
+    }
   }
 
   return (
@@ -85,7 +95,7 @@ export function FormScreen({
             <option value="" disabled>
               Selecione...
             </option>
-            {TIPOS_TREINO.map((t) => (
+            {tipos.map((t) => (
               <option key={t} value={t}>
                 {t}
               </option>
@@ -137,12 +147,22 @@ export function FormScreen({
           />
         </div>
 
+        {recusa && (
+          <div
+            role="alert"
+            className="flex items-start gap-2 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          >
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+            <span>{recusa}</span>
+          </div>
+        )}
+
         <div className="mt-2 flex gap-3">
           <M3Button type="button" variant="outlined" className="flex-1" onClick={onCancelar}>
             Cancelar
           </M3Button>
-          <M3Button type="submit" className="flex-1">
-            {editando ? "Salvar" : "Criar treino"}
+          <M3Button type="submit" className="flex-1" disabled={salvando}>
+            {salvando ? "Salvando..." : editando ? "Salvar" : "Criar treino"}
           </M3Button>
         </div>
       </form>

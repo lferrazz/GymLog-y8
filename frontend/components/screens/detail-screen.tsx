@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft, Pencil, Trash2, Clock, CalendarDays, Tag, FileText } from "lucide-react"
+import { AlertCircle, ArrowLeft, Pencil, Trash2, Clock, CalendarDays, Tag, FileText } from "lucide-react"
 import { M3TopAppBar, M3IconButton, M3Button } from "@/components/m3"
 import { TipoIcon } from "@/components/tipo-icon"
 import { type Treino, formatarDataHora, formatarDuracao } from "@/lib/treino-data"
@@ -27,11 +27,13 @@ function Linha({
 
 export function DetailScreen({
   treino,
+  erro,
   onVoltar,
   onEditar,
   onExcluir,
 }: {
   treino: Treino
+  erro?: string | null
   onVoltar: () => void
   onEditar: () => void
   onExcluir: () => void
@@ -82,15 +84,26 @@ export function DetailScreen({
         </div>
       </div>
 
-      <div className="sticky bottom-0 flex gap-3 bg-background/80 px-4 py-4 backdrop-blur">
-        <M3Button variant="outlined" className="flex-1 text-destructive" onClick={onExcluir}>
-          <Trash2 className="h-5 w-5" aria-hidden />
-          Excluir
-        </M3Button>
-        <M3Button className="flex-1" onClick={onEditar}>
-          <Pencil className="h-5 w-5" aria-hidden />
-          Editar
-        </M3Button>
+      <div className="sticky bottom-0 bg-background/80 px-4 py-4 backdrop-blur">
+        <div className="flex gap-3">
+          <M3Button variant="outlined" className="flex-1 text-destructive" onClick={onExcluir}>
+            <Trash2 className="h-5 w-5" aria-hidden />
+            Excluir
+          </M3Button>
+          <M3Button className="flex-1" onClick={onEditar}>
+            <Pencil className="h-5 w-5" aria-hidden />
+            Editar
+          </M3Button>
+        </div>
+        {erro && (
+          <div
+            role="alert"
+            className="mt-3 flex items-start gap-2 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          >
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+            <span>{erro}</span>
+          </div>
+        )}
       </div>
     </div>
   )
